@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 )
@@ -31,8 +30,9 @@ func main() {
 
 	repo := openOrInitRepo()
 
-	commits, _ := getProjectCommits(projectIds[1], os.Getenv("COMMITER_NAME"))
-
-	createLocalCommit(repo, commits)
+	for index := range projectIds {
+		commits, _ := getProjectCommits(projectIds[index], os.Getenv("COMMITER_NAME"))
+		createLocalCommit(repo, commits)
+	}
 
 }

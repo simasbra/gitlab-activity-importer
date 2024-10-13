@@ -51,33 +51,33 @@ func createLocalCommit(repo *git.Repository, commit []Commit) {
 
 	for index := range commit {
 		isDuplicate, _ := checkIfCommitExists(repo, commit[index])
-		if isDuplicate {
-			log.Println("this commit has been already imported. Skipping.")
-			return
-		}
 
-		newCommit, err := workTree.Commit(commit[index].ID, &git.CommitOptions{
-			Author: &object.Signature{
-				Name:  os.Getenv("COMMITER_NAME"),
-				Email: os.Getenv("COMMITER_EMAIL"),
-				When:  commit[index].AuthoredDate,
-			},
-			Committer: &object.Signature{
-				Name:  os.Getenv("COMMITER_NAME"),
-				Email: os.Getenv("COMMITER_EMAIL"),
-				When:  commit[index].AuthoredDate,
-			},
-		})
-		if err != nil {
-			log.Fatal(err)
-		}
+		if !isDuplicate {
+			newCommit, err := workTree.Commit(commit[index].ID, &git.CommitOptions{
+				Author: &object.Signature{
+					Name:  os.Getenv("COMMITER_NAME"),
+					Email: os.Getenv("COMMITER_EMAIL"),
+					When:  commit[index].AuthoredDate,
+				},
+				Committer: &object.Signature{
+					Name:  os.Getenv("COMMITER_NAME"),
+					Email: os.Getenv("COMMITER_EMAIL"),
+					When:  commit[index].AuthoredDate,
+				},
+			})
+			if err != nil {
+				log.Fatal(err)
+			}
 
-		obj, err := repo.CommitObject(newCommit)
-		if err != nil {
-			log.Fatal(err)
-		}
+			obj, err := repo.CommitObject(newCommit)
+			if err != nil {
+				log.Fatal(err)
+			}
 
-		log.Printf("Created commit: %s\n", obj.Hash)
+			log.Printf("Created commit: %s\n", obj.Hash)
+		} else {
+			log.Printf("Commit: %v: %v already imported \n", commit[index].AuthoredDate, commit[index].Message)
+		}
 	}
 }
 
@@ -92,18 +92,16 @@ func checkIfCommitExists(repo *git.Repository, commit Commit) (bool, error) {
 		return false, err
 	}
 
-	exists := false
 	err = iter.ForEach(func(c *object.Commit) error {
 		if c.Message == commit.ID {
-			exists = true
 			return fmt.Errorf("duplicate commit found")
 		}
 		return nil
 	})
 
 	if err != nil {
-		return false, err
+		return true, err
 	}
 
-	return exists, nil
+	return false, nil
 }
