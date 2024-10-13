@@ -22,3 +22,11 @@ func checkEnvVariables() {
 		}
 	}
 }
+
+func getHomeDirectory() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal("Unable to get the user home directory:", err)
+	}
+	return homeDir
+}

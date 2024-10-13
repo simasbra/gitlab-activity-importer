@@ -29,6 +29,10 @@ func main() {
 		log.Fatalf("Error during getting users projects: %v", err)
 	}
 
-	fmt.Println(projectIds[2])
-	getProjectCommits(projectIds[2], os.Getenv("COMMITER_NAME"))
+	repo := openOrInitRepo()
+
+	commits, _ := getProjectCommits(projectIds[1], os.Getenv("COMMITER_NAME"))
+
+	createLocalCommit(repo, commits)
+
 }

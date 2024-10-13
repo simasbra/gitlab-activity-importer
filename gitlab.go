@@ -78,15 +78,7 @@ func getUsersProjectsIds(userId int) ([]int, error) {
 	return projectIds, nil
 }
 
-type Commit struct {
-	ID           string
-	Message      string
-	AuthorName   string
-	AuthorMail   string
-	AuthoredDate string
-}
-
-func getProjectCommits(projectId int, userName string) {
+func getProjectCommits(projectId int, userName string) ([]Commit, error) {
 	url := os.Getenv("BASE_URL")
 
 	client := &http.Client{}
@@ -120,11 +112,11 @@ func getProjectCommits(projectId int, userName string) {
 	}
 
 	if len(commits) == 0 {
-		log.Fatalf("No commits in this projects found")
+		return nil, fmt.Errorf("no commits for project found")
+
 	}
 
-	fmt.Println(commits[0].ID)
-	fmt.Println(commits[0].AuthorName)
-	fmt.Println(commits[0].Message)
+	fmt.Printf("found %v commits \n", len(commits))
+	return commits, nil
 
 }
