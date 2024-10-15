@@ -27,7 +27,7 @@ func openOrInitRepo() *git.Repository {
 	return repo
 }
 
-func createLocalCommit(repo *git.Repository, commit []Commit) {
+func createLocalCommit(repo *git.Repository, commit []Commit) int {
 	workTree, err := repo.Worktree()
 	if err != nil {
 		log.Fatal(err)
@@ -49,6 +49,7 @@ func createLocalCommit(repo *git.Repository, commit []Commit) {
 		log.Fatal(err)
 	}
 
+	totalCommits := 0
 	for index := range commit {
 		isDuplicate, _ := checkIfCommitExists(repo, commit[index])
 
@@ -75,10 +76,12 @@ func createLocalCommit(repo *git.Repository, commit []Commit) {
 			}
 
 			log.Printf("Created commit: %s\n", obj.Hash)
+			totalCommits += 1
 		} else {
-			log.Printf("Commit: %v: %v already imported \n", commit[index].AuthoredDate, commit[index].Message)
+			log.Printf("Commit: %v is already imported \n", commit[index].ID)
 		}
 	}
+	return totalCommits
 }
 
 func checkIfCommitExists(repo *git.Repository, commit Commit) (bool, error) {

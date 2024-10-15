@@ -27,12 +27,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error during getting users projects: %v", err)
 	}
+	log.Printf("Found contributions in %v projects \n", len(projectIds))
 
 	repo := openOrInitRepo()
+	totalCommits := 0
 
 	for index := range projectIds {
 		commits, _ := getProjectCommits(projectIds[index], os.Getenv("COMMITER_NAME"))
-		createLocalCommit(repo, commits)
+		localCommits := createLocalCommit(repo, commits)
+		totalCommits += localCommits
 	}
+	log.Printf("Imported %v commits. \n", totalCommits)
 
 }

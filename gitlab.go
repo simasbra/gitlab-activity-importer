@@ -116,7 +116,7 @@ func getProjectCommits(projectId int, userName string) ([]Commit, error) {
 
 	}
 
-	fmt.Printf("found %v commits \n", len(commits))
+	log.Printf("Found %v commits in this project \n", len(commits))
 	return commits, nil
 
 }
