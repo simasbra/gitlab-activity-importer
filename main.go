@@ -39,4 +39,6 @@ func main() {
 	}
 	log.Printf("Imported %v commits. \n", totalCommits)
 
+	pushImportedCommits(repo)
+
 }

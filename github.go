@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/object"
 	"log"
 	"os"
+
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 )
 
 func openOrInitRepo() *git.Repository {
@@ -13,8 +15,8 @@ func openOrInitRepo() *git.Repository {
 	repo, err := git.PlainOpen(repoPath)
 	if err != nil {
 		if err == git.ErrRepositoryNotExists {
-			log.Println("Repository doesn't exist. Initializing a new repository.")
-			repo, err = git.PlainInit(repoPath, false)
+			log.Println("Repository doesn't exist. Cloning new repository from remote.")
+			repo, err = cloneRemoteRepo()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -25,6 +27,25 @@ func openOrInitRepo() *git.Repository {
 		log.Println("Opened existing repository.")
 	}
 	return repo
+}
+
+func cloneRemoteRepo() (*git.Repository, error) {
+	homeDir := getHomeDirectory() + "/commits-importer/"
+	repoURL := os.Getenv("GITHUB_REPO_URL")
+	repo, err := git.PlainClone(homeDir, false, &git.CloneOptions{
+		URL: repoURL,
+		Auth: &http.BasicAuth{
+			Username: os.Getenv("COMMITER_NAME"),
+			Password: os.Getenv("GITHUB_TOKEN"),
+		},
+		Progress: os.Stdout,
+	})
+
+	if err != nil {
+		log.Fatalf("Error cloning the repository: %v", err)
+		return nil, err
+	}
+	return repo, nil
 }
 
 func createLocalCommit(repo *git.Repository, commit []Commit) int {
@@ -107,4 +128,22 @@ func checkIfCommitExists(repo *git.Repository, commit Commit) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func pushImportedCommits(repo *git.Repository) {
+	err := repo.Push(&git.PushOptions{
+		Auth: &http.BasicAuth{
+			Username: os.Getenv("COMMITER_NAME"),
+			Password: os.Getenv("GITHUB_TOKEN"),
+		},
+		Progress: os.Stdout,
+	})
+
+	if err != nil {
+		if err == git.NoErrAlreadyUpToDate {
+			log.Println("No changes to push, everything is up to date.")
+		} else {
+			log.Fatalf("Error pushing to Github: %v", err)
+		}
+	}
 }
