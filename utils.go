@@ -14,7 +14,7 @@ func checkEnvVariables() {
 		log.Fatal("Error loading the .env file")
 	}
 
-	requiredEnvVars := []string{"BASE_URL", "GITLAB_TOKEN", "COMMITER_NAME", "COMMITER_EMAIL"}
+	requiredEnvVars := []string{"BASE_URL", "GITLAB_TOKEN", "COMMITER_NAME", "COMMITER_EMAIL", "GITHUB_REPO_URL", "GITHUB_TOKEN"}
 
 	for _, envVal := range requiredEnvVars {
 		if os.Getenv(envVal) == "" {
