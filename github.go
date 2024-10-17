@@ -31,12 +31,12 @@ func openOrInitRepo() *git.Repository {
 
 func cloneRemoteRepo() (*git.Repository, error) {
 	homeDir := getHomeDirectory() + "/commits-importer/"
-	repoURL := os.Getenv("GITHUB_REPO_URL")
+	repoURL := os.Getenv("ORIGIN_REPO_URL")
 	repo, err := git.PlainClone(homeDir, false, &git.CloneOptions{
 		URL: repoURL,
 		Auth: &http.BasicAuth{
 			Username: os.Getenv("COMMITER_NAME"),
-			Password: os.Getenv("GITHUB_TOKEN"),
+			Password: os.Getenv("ORIGIN_TOKEN"),
 		},
 		Progress: os.Stdout,
 	})
@@ -134,7 +134,7 @@ func pushImportedCommits(repo *git.Repository) {
 	err := repo.Push(&git.PushOptions{
 		Auth: &http.BasicAuth{
 			Username: os.Getenv("COMMITER_NAME"),
-			Password: os.Getenv("GITHUB_TOKEN"),
+			Password: os.Getenv("ORIGIN_TOKEN"),
 		},
 		Progress: os.Stdout,
 	})
