@@ -1,4 +1,5 @@
 name: Run Go App Every 5 Minutes
+
 on:
   schedule:
     - cron: '*/5 * * * *' # Runs every 5 minutes
@@ -7,22 +8,16 @@ jobs:
   build-and-run:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: '1.23.1'
 
       - name: Build
-        env:
-          BASE_URL: ${{ secrets.BASE_URL }}
-          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
-          COMMITER_NAME: ${{ secrets.COMMITER_NAME }}
-          COMMITER_EMAIL: ${{ secrets.COMMITER_EMAIL }}
-          ORIGIN_REPO_URL: ${{ secrets.ORIGIN_REPO_URL }}
-          ORIGIN_TOKEN: ${{ secrets.ORIGIN_TOKEN }}
         run: go build -o importer
+
       - name: Run App
         env:
           BASE_URL: ${{ secrets.BASE_URL }}
