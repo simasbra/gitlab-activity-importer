@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"log"
@@ -7,7 +7,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func checkEnvVariables() {
+func CheckEnvVariables() {
 	if os.Getenv("ENV") != "PRODUCTION" {
 		err := godotenv.Load()
 
@@ -25,7 +25,7 @@ func checkEnvVariables() {
 	}
 }
 
-func getHomeDirectory() string {
+func GetHomeDirectory() string {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal("Unable to get the user home directory:", err)

@@ -2,20 +2,17 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
-	"sync"
-	"time"
+
+	"github.com/furmanp/gitlab-activity-importer/internal"
+	"github.com/furmanp/gitlab-activity-importer/internal/services"
 )
 
 func main() {
+	internal.CheckEnvVariables()
 
-	startNow := time.Now()
-
-	checkEnvVariables()
-
-	gitlabUser := getGitlabUser()
+	gitlabUser := services.GetGitlabUser()
 
 	var result map[string]interface{}
 	err := json.Unmarshal([]byte(gitlabUser), &result)
@@ -27,7 +24,7 @@ func main() {
 	gitLabUserId := result["id"].(float64)
 
 	var projectIds []int
-	projectIds, err = getUsersProjectsIds(int(gitLabUserId))
+	projectIds, err = services.GetUsersProjectsIds(int(gitLabUserId))
 
 	if err != nil {
 		log.Fatalf("Error during getting users projects: %v", err)
@@ -39,36 +36,21 @@ func main() {
 
 	log.Printf("Found contributions in %v projects \n", len(projectIds))
 
-	repo := openOrInitRepo()
+	repo := services.OpenOrInitRepo()
 
-	var wg sync.WaitGroup
-	commitChannel := make(chan []Commit)
+	commitChannel := make(chan []internal.Commit, len(projectIds))
 
 	go func() {
 		totalCommits := 0
 		for commits := range commitChannel {
-			localCommits := createLocalCommit(repo, commits)
+			localCommits := services.CreateLocalCommit(repo, commits)
 			totalCommits += localCommits
 		}
 		log.Printf("Imported %v commits.\n", totalCommits)
 
-		pushImportedCommits(repo)
 	}()
 
-	for _, projectId := range projectIds {
-		wg.Add(1)
-		go func(projId int) {
-			defer wg.Done()
+	services.FetchAllCommits(projectIds, os.Getenv("COMMITER_NAME"), commitChannel)
 
-			commits := getProjectCommits(projId, os.Getenv("COMMITER_NAME"))
-
-			commitChannel <- commits
-
-		}(projectId)
-	}
-	wg.Wait()
-
-	pushImportedCommits(repo)
-
-	fmt.Printf("This operation took: %v \n", time.Since(startNow))
+	services.PushLocalCommits(repo)
 }

@@ -1,4 +1,4 @@
-module tools/importer
+module github.com/furmanp/gitlab-activity-importer
 
 go 1.23.1
 
