@@ -1,4 +1,4 @@
-package main
+package services
 
 import (
 	"encoding/json"
@@ -7,9 +7,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
+
+	"github.com/furmanp/gitlab-activity-importer/internal"
 )
 
-func getGitlabUser() string {
+func GetGitlabUser() string {
 	url := os.Getenv("BASE_URL")
 
 	client := &http.Client{}
@@ -19,7 +22,7 @@ func getGitlabUser() string {
 	res, err := client.Do(req)
 
 	if err != nil {
-		fmt.Print("something went wrong with your request", err)
+		log.Print("something went wrong with your request", err)
 	}
 
 	if res.StatusCode == http.StatusOK {
@@ -35,7 +38,7 @@ func getGitlabUser() string {
 	return "User not found"
 }
 
-func getUsersProjectsIds(userId int) ([]int, error) {
+func GetUsersProjectsIds(userId int) ([]int, error) {
 	url := os.Getenv("BASE_URL")
 
 	client := &http.Client{}
@@ -79,11 +82,11 @@ func getUsersProjectsIds(userId int) ([]int, error) {
 	return projectIds, nil
 }
 
-func getProjectCommits(projectId int, userName string) ([]Commit, error) {
+func GetProjectCommits(projectId int, userName string) []internal.Commit {
 	url := os.Getenv("BASE_URL")
 	token := os.Getenv("GITLAB_TOKEN")
 
-	var allCommits []Commit
+	var allCommits []internal.Commit
 	client := &http.Client{}
 	page := 1
 
@@ -109,14 +112,13 @@ func getProjectCommits(projectId int, userName string) ([]Commit, error) {
 			log.Fatalf("Error reading the response body: %v", err)
 		}
 
-		var commits []Commit
+		var commits []internal.Commit
 		err = json.Unmarshal(body, &commits)
 		if err != nil {
 			log.Fatalf("Error parsing JSON: %v", err)
 		}
 
 		if len(commits) == 0 {
-			log.Printf("No more commits found, stopping at page %d\n", page)
 			break
 		}
 
@@ -126,9 +128,33 @@ func getProjectCommits(projectId int, userName string) ([]Commit, error) {
 	}
 
 	if len(allCommits) == 0 {
-		return nil, fmt.Errorf("no commits found for project")
+		log.Printf("Found no commits in project no.:%v \n", projectId)
+		return nil
 	}
 
-	log.Printf("Found %v commits.\n", len(allCommits))
-	return allCommits, nil
+	log.Printf("Found total of %v commits in project no.:%v \n", len(allCommits), projectId)
+
+	return allCommits
+}
+
+func FetchAllCommits(projectIds []int, commiterName string, commitChannel chan []internal.Commit) {
+	var wg sync.WaitGroup
+
+	for _, projectId := range projectIds {
+		wg.Add(1)
+
+		go func(projId int) {
+			defer wg.Done()
+
+			commits := GetProjectCommits(projId, commiterName)
+			if len(commits) > 0 {
+				commitChannel <- commits
+			}
+
+		}(projectId)
+	}
+
+	wg.Wait()
+	close(commitChannel)
+
 }

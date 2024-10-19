@@ -1,17 +1,18 @@
-package main
+package services
 
 import (
 	"fmt"
 	"log"
 	"os"
 
+	"github.com/furmanp/gitlab-activity-importer/internal"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 )
 
-func openOrInitRepo() *git.Repository {
-	repoPath := getHomeDirectory() + "/commits-importer/"
+func OpenOrInitRepo() *git.Repository {
+	repoPath := internal.GetHomeDirectory() + "/commits-importer/"
 	repo, err := git.PlainOpen(repoPath)
 	if err != nil {
 		if err == git.ErrRepositoryNotExists {
@@ -30,7 +31,7 @@ func openOrInitRepo() *git.Repository {
 }
 
 func cloneRemoteRepo() (*git.Repository, error) {
-	homeDir := getHomeDirectory() + "/commits-importer/"
+	homeDir := internal.GetHomeDirectory() + "/commits-importer/"
 	repoURL := os.Getenv("ORIGIN_REPO_URL")
 	repo, err := git.PlainClone(homeDir, false, &git.CloneOptions{
 		URL: repoURL,
@@ -48,13 +49,13 @@ func cloneRemoteRepo() (*git.Repository, error) {
 	return repo, nil
 }
 
-func createLocalCommit(repo *git.Repository, commit []Commit) int {
+func CreateLocalCommit(repo *git.Repository, commit []internal.Commit) int {
 	workTree, err := repo.Worktree()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	repoPath := getHomeDirectory() + "/commits-importer/"
+	repoPath := internal.GetHomeDirectory() + "/commits-importer/"
 	filePath := repoPath + "/readme.md"
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		file, err := os.Create(filePath)
@@ -105,7 +106,7 @@ func createLocalCommit(repo *git.Repository, commit []Commit) int {
 	return totalCommits
 }
 
-func checkIfCommitExists(repo *git.Repository, commit Commit) (bool, error) {
+func checkIfCommitExists(repo *git.Repository, commit internal.Commit) (bool, error) {
 	ref, err := repo.Reference("HEAD", true)
 	if err != nil {
 		return false, err
@@ -130,7 +131,7 @@ func checkIfCommitExists(repo *git.Repository, commit Commit) (bool, error) {
 	return false, nil
 }
 
-func pushImportedCommits(repo *git.Repository) {
+func PushLocalCommits(repo *git.Repository) {
 	err := repo.Push(&git.PushOptions{
 		Auth: &http.BasicAuth{
 			Username: os.Getenv("COMMITER_NAME"),
