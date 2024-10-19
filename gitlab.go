@@ -19,7 +19,7 @@ func getGitlabUser() string {
 	res, err := client.Do(req)
 
 	if err != nil {
-		fmt.Print("something went wrong with your request", err)
+		log.Print("something went wrong with your request", err)
 	}
 
 	if res.StatusCode == http.StatusOK {
@@ -79,7 +79,7 @@ func getUsersProjectsIds(userId int) ([]int, error) {
 	return projectIds, nil
 }
 
-func getProjectCommits(projectId int, userName string) ([]Commit, error) {
+func getProjectCommits(projectId int, userName string) []Commit {
 	url := os.Getenv("BASE_URL")
 	token := os.Getenv("GITLAB_TOKEN")
 
@@ -126,9 +126,10 @@ func getProjectCommits(projectId int, userName string) ([]Commit, error) {
 	}
 
 	if len(allCommits) == 0 {
-		return nil, fmt.Errorf("no commits found for project")
+		return nil
 	}
 
-	log.Printf("Found %v commits.\n", len(allCommits))
-	return allCommits, nil
+	log.Printf("Found total of %v commits in project no.: %v \n", len(allCommits), projectId)
+
+	return allCommits
 }
