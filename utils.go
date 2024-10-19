@@ -12,11 +12,11 @@ func checkEnvVariables() {
 		err := godotenv.Load()
 
 		if err != nil {
-			log.Fatal("Error loading the .env file")
+			log.Fatalf("Error loading the .env file: %v", err)
 		}
 	}
 
-	requiredEnvVars := []string{"BASE_URL", "GITLAB_TOKEN", "COMMITER_NAME", "COMMITER_EMAIL", "ORIGIN_REPO_URL", "ORIGIN_TOKEN"}
+	requiredEnvVars := []string{"BASE_URL", "GITLAB_TOKEN", "COMMITER_NAME", "COMMITER_EMAIL", "ORIGIN_REPO_URL", "ORIGIN_TOKEN", "ENV"}
 
 	for _, envVal := range requiredEnvVars {
 		if os.Getenv(envVal) == "" {

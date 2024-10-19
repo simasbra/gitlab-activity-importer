@@ -49,7 +49,6 @@ func getUsersProjectsIds(userId int) ([]int, error) {
 	if err != nil {
 		log.Fatalf("Error making the request: %v", err)
 	}
-	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		log.Fatalf("Request failed with status code: %v", res.StatusCode)
@@ -59,6 +58,8 @@ func getUsersProjectsIds(userId int) ([]int, error) {
 	if err != nil {
 		log.Fatalf("Error reading the response body: %v", err)
 	}
+
+	res.Body.Close()
 
 	var result []map[string]interface{}
 	if err := json.Unmarshal(body, &result); err != nil {
