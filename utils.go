@@ -3,16 +3,20 @@ package main
 import (
 	"log"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 func checkEnvVariables() {
-	// err := godotenv.Load()
+	if os.Getenv("ENV") != "PRODUCTION" {
+		err := godotenv.Load()
 
-	// if err != nil {
-	// 	log.Fatal("Error loading the .env file")
-	// }
+		if err != nil {
+			log.Fatalf("Error loading the .env file: %v", err)
+		}
+	}
 
-	requiredEnvVars := []string{"BASE_URL", "GITLAB_TOKEN", "COMMITER_NAME", "COMMITER_EMAIL", "ORIGIN_REPO_URL", "ORIGIN_TOKEN"}
+	requiredEnvVars := []string{"BASE_URL", "GITLAB_TOKEN", "COMMITER_NAME", "COMMITER_EMAIL", "ORIGIN_REPO_URL", "ORIGIN_TOKEN", "ENV"}
 
 	for _, envVal := range requiredEnvVars {
 		if os.Getenv(envVal) == "" {

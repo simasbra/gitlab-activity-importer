@@ -49,7 +49,6 @@ func getUsersProjectsIds(userId int) ([]int, error) {
 	if err != nil {
 		log.Fatalf("Error making the request: %v", err)
 	}
-	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		log.Fatalf("Request failed with status code: %v", res.StatusCode)
@@ -59,6 +58,8 @@ func getUsersProjectsIds(userId int) ([]int, error) {
 	if err != nil {
 		log.Fatalf("Error reading the response body: %v", err)
 	}
+
+	res.Body.Close()
 
 	var result []map[string]interface{}
 	if err := json.Unmarshal(body, &result); err != nil {
@@ -80,43 +81,54 @@ func getUsersProjectsIds(userId int) ([]int, error) {
 
 func getProjectCommits(projectId int, userName string) ([]Commit, error) {
 	url := os.Getenv("BASE_URL")
+	token := os.Getenv("GITLAB_TOKEN")
 
+	var allCommits []Commit
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", fmt.Sprintf("%v/api/v4/projects/%v/repository/commits?author=%v&per_page=100&page=1", url, projectId, userName), nil)
-	if err != nil {
-		log.Fatalf("Error fetching the commits: %v", err)
+	page := 1
+
+	for {
+		req, err := http.NewRequest("GET", fmt.Sprintf("%v/api/v4/projects/%v/repository/commits?author=%v&per_page=100&page=%d", url, projectId, userName, page), nil)
+		if err != nil {
+			log.Fatalf("Error fetching the commits: %v", err)
+		}
+
+		req.Header.Set("PRIVATE-TOKEN", token)
+		res, err := client.Do(req)
+		if err != nil {
+			log.Fatalf("Error making the request: %v", err)
+		}
+		defer res.Body.Close()
+
+		if res.StatusCode != http.StatusOK {
+			log.Fatalf("Request failed with status code: %v", res.StatusCode)
+		}
+
+		body, err := io.ReadAll(res.Body)
+		if err != nil {
+			log.Fatalf("Error reading the response body: %v", err)
+		}
+
+		var commits []Commit
+		err = json.Unmarshal(body, &commits)
+		if err != nil {
+			log.Fatalf("Error parsing JSON: %v", err)
+		}
+
+		if len(commits) == 0 {
+			log.Printf("No more commits found, stopping at page %d\n", page)
+			break
+		}
+
+		allCommits = append(allCommits, commits...)
+
+		page++
 	}
 
-	req.Header.Set("PRIVATE-TOKEN", os.Getenv("GITLAB_TOKEN"))
-	res, err := client.Do(req)
-
-	if err != nil {
-		log.Fatalf("Error making the request: %v", err)
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		log.Fatalf("Request failed with status code: %v", res.StatusCode)
+	if len(allCommits) == 0 {
+		return nil, fmt.Errorf("no commits found for project")
 	}
 
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		log.Fatalf("Error reading the response body: %v", err)
-	}
-
-	var commits []Commit
-
-	err = json.Unmarshal([]byte(body), &commits)
-	if err != nil {
-		log.Fatalf("Error parsing JSON: %v", err)
-	}
-
-	if len(commits) == 0 {
-		return nil, fmt.Errorf("no commits for project found")
-
-	}
-
-	log.Printf("Found %v commits in this project \n", len(commits))
-	return commits, nil
-
+	log.Printf("Found %v commits.\n", len(allCommits))
+	return allCommits, nil
 }
