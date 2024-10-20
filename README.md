@@ -40,4 +40,4 @@ If you prefer to run the importer manually:
 - **GitLab permissions:** The tool only requires read access to your GitLab repositories.
 - **GitHub permissions:** Your GitHub token must have write access to the destination repository for automatic pushes.
 
-[![Go Report Card](https://github.com/furmanp/gitlab-activity-importer)](https://goreportcard.com/report/github.com/furmanp/gitlab-activity-importer)
+[![Go Report Card](https://goreportcard.com/badge/github.com/furmanp/gitlab-activity-importer)](https://goreportcard.com/report/github.com/furmanp/gitlab-activity-importer)
