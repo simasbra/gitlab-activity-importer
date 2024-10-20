@@ -8,7 +8,7 @@ import (
 )
 
 func CheckEnvVariables() {
-	if os.Getenv("ENV") != "PRODUCTION" {
+	if os.Getenv("ENV") == "DEVELOPMENT" {
 		err := godotenv.Load()
 
 		if err != nil {
@@ -16,7 +16,7 @@ func CheckEnvVariables() {
 		}
 	}
 
-	requiredEnvVars := []string{"BASE_URL", "GITLAB_TOKEN", "COMMITER_NAME", "COMMITER_EMAIL", "ORIGIN_REPO_URL", "ORIGIN_TOKEN", "ENV"}
+	requiredEnvVars := []string{"BASE_URL", "GITLAB_TOKEN", "COMMITER_NAME", "COMMITER_EMAIL", "ORIGIN_REPO_URL", "ORIGIN_TOKEN"}
 
 	for _, envVal := range requiredEnvVars {
 		if os.Getenv(envVal) == "" {
