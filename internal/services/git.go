@@ -7,12 +7,15 @@ import (
 
 	"github.com/furmanp/gitlab-activity-importer/internal"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 )
 
-func OpenOrInitRepo() *git.Repository {
+func OpenOrInitClone() *git.Repository {
 	repoPath := internal.GetHomeDirectory() + "/commits-importer/"
+
 	repo, err := git.PlainOpen(repoPath)
 	if err != nil {
 		if err == git.ErrRepositoryNotExists {
@@ -33,6 +36,7 @@ func OpenOrInitRepo() *git.Repository {
 func cloneRemoteRepo() (*git.Repository, error) {
 	homeDir := internal.GetHomeDirectory() + "/commits-importer/"
 	repoURL := os.Getenv("ORIGIN_REPO_URL")
+
 	repo, err := git.PlainClone(homeDir, false, &git.CloneOptions{
 		URL: repoURL,
 		Auth: &http.BasicAuth{
@@ -43,9 +47,26 @@ func cloneRemoteRepo() (*git.Repository, error) {
 	})
 
 	if err != nil {
-		log.Fatalf("Error cloning the repository: %v", err)
-		return nil, err
+		if err == transport.ErrEmptyRemoteRepository {
+			newRepo, initErr := git.PlainInit(homeDir, false)
+			if initErr != nil {
+				_ = os.RemoveAll(homeDir)
+				return nil, initErr
+			}
+
+			_, remoteErr := newRepo.CreateRemote(&config.RemoteConfig{
+				Name: "origin",
+				URLs: []string{repoURL},
+			})
+			if remoteErr != nil {
+				return nil, remoteErr
+			}
+
+			return newRepo, nil
+		}
+		return nil, fmt.Errorf("error cloning repository: %w", err)
 	}
+
 	return repo, nil
 }
 

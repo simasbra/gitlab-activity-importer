@@ -36,7 +36,7 @@ func main() {
 
 	log.Printf("Found contributions in %v projects \n", len(projectIds))
 
-	repo := services.OpenOrInitRepo()
+	repo := services.OpenOrInitClone()
 
 	commitChannel := make(chan []internal.Commit, len(projectIds))
 
