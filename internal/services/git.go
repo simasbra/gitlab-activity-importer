@@ -8,6 +8,7 @@ import (
 	"github.com/furmanp/gitlab-activity-importer/internal"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
@@ -70,7 +71,7 @@ func cloneRemoteRepo() (*git.Repository, error) {
 	return repo, nil
 }
 
-func CreateLocalCommit(repo *git.Repository, commit []internal.Commit) int {
+func CreateLocalCommit(repo *git.Repository, commits []internal.Commit) int {
 	workTree, err := repo.Worktree()
 	if err != nil {
 		log.Fatal(err)
@@ -92,21 +93,24 @@ func CreateLocalCommit(repo *git.Repository, commit []internal.Commit) int {
 		log.Fatal(err)
 	}
 
-	totalCommits := 0
-	for index := range commit {
-		isDuplicate, _ := checkIfCommitExists(repo, commit[index])
+	existingCommitSet, err := getAllExistingCommitSHAs(repo)
+	if err != nil {
+		log.Fatalf("Something went wrong with reading local commits: %v", err)
+	}
 
-		if !isDuplicate {
-			newCommit, err := workTree.Commit(commit[index].ID, &git.CommitOptions{
+	totalCommits := 0
+	for _, commit := range commits {
+		if !existingCommitSet[commit.ID] {
+			newCommit, err := workTree.Commit(commit.ID, &git.CommitOptions{
 				Author: &object.Signature{
 					Name:  os.Getenv("COMMITER_NAME"),
 					Email: os.Getenv("COMMITER_EMAIL"),
-					When:  commit[index].AuthoredDate,
+					When:  commit.AuthoredDate,
 				},
 				Committer: &object.Signature{
 					Name:  os.Getenv("COMMITER_NAME"),
 					Email: os.Getenv("COMMITER_EMAIL"),
-					When:  commit[index].AuthoredDate,
+					When:  commit.AuthoredDate,
 				},
 			})
 			if err != nil {
@@ -119,37 +123,39 @@ func CreateLocalCommit(repo *git.Repository, commit []internal.Commit) int {
 			}
 
 			log.Printf("Created commit: %s\n", obj.Hash)
-			totalCommits += 1
+			totalCommits++
 		} else {
-			log.Printf("Commit: %v is already imported \n", commit[index].ID)
+			log.Printf("Commit: %v is already imported \n", commit.ID)
 		}
 	}
 	return totalCommits
 }
 
-func checkIfCommitExists(repo *git.Repository, commit internal.Commit) (bool, error) {
+func getAllExistingCommitSHAs(repo *git.Repository) (map[string]bool, error) {
+	existingCommits := make(map[string]bool)
 	ref, err := repo.Reference("HEAD", true)
 	if err != nil {
-		return false, err
+		if err == plumbing.ErrReferenceNotFound {
+			return existingCommits, nil
+		}
+		return nil, fmt.Errorf("failed to get HEAD reference: %v", err)
 	}
 
 	iter, err := repo.Log(&git.LogOptions{From: ref.Hash()})
 	if err != nil {
-		return false, err
+		return nil, fmt.Errorf("failed to get commit log: %v", err)
 	}
+	defer iter.Close()
 
 	err = iter.ForEach(func(c *object.Commit) error {
-		if c.Message == commit.ID {
-			return fmt.Errorf("duplicate commit found")
-		}
+		existingCommits[c.Message] = true
 		return nil
 	})
-
 	if err != nil {
-		return true, err
+		return nil, fmt.Errorf("failed to iterate commits: %v", err)
 	}
 
-	return false, nil
+	return existingCommits, nil
 }
 
 func PushLocalCommits(repo *git.Repository) {
