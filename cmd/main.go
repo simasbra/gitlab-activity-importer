@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"time"
 
 	"github.com/furmanp/gitlab-activity-importer/internal"
 	"github.com/furmanp/gitlab-activity-importer/internal/services"
 )
 
 func main() {
+	startNow := time.Now()
 	internal.CheckEnvVariables()
 
 	gitlabUser := services.GetGitlabUser()
@@ -53,4 +55,5 @@ func main() {
 	services.FetchAllCommits(projectIds, os.Getenv("COMMITER_NAME"), commitChannel)
 
 	services.PushLocalCommits(repo)
+	log.Printf("Operation took: %v in total.", time.Since(startNow))
 }
