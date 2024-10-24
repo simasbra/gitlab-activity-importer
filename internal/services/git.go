@@ -8,6 +8,7 @@ import (
 	"github.com/furmanp/gitlab-activity-importer/internal"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
@@ -131,8 +132,12 @@ func CreateLocalCommit(repo *git.Repository, commits []internal.Commit) int {
 }
 
 func getAllExistingCommitSHAs(repo *git.Repository) (map[string]bool, error) {
+	existingCommits := make(map[string]bool)
 	ref, err := repo.Reference("HEAD", true)
 	if err != nil {
+		if err == plumbing.ErrReferenceNotFound {
+			return existingCommits, nil
+		}
 		return nil, fmt.Errorf("failed to get HEAD reference: %v", err)
 	}
 
@@ -142,7 +147,6 @@ func getAllExistingCommitSHAs(repo *git.Repository) (map[string]bool, error) {
 	}
 	defer iter.Close()
 
-	existingCommits := make(map[string]bool)
 	err = iter.ForEach(func(c *object.Commit) error {
 		existingCommits[c.Message] = true
 		return nil
