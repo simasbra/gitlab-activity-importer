@@ -20,10 +20,19 @@ jobs:
           go-version: '1.23.1'
 
       - name: Build
-        run: go build -o GitLab-Importer ./cmd/main.go
-
-      - name: Archive the binary
-        run: zip GitLab-Importer.zip GitLab-Importer
+        run: |
+          # Build for multiple platforms
+          GOOS=linux GOARCH=amd64 go build -ldflags="-X main.Version=${{ github.ref_name }}" -o GitLab-Importer-linux-amd64 ./cmd/main.go
+          GOOS=windows GOARCH=amd64 go build -ldflags="-X main.Version=${{ github.ref_name }}" -o GitLab-Importer-windows-amd64.exe ./cmd/main.go
+          GOOS=darwin GOARCH=amd64 go build -ldflags="-X main.Version=${{ github.ref_name }}" -o GitLab-Importer-darwin-amd64 ./cmd/main.go
+          
+          # Create archives
+          zip GitLab-Importer-linux-amd64.zip GitLab-Importer-linux-amd64
+          zip GitLab-Importer-windows-amd64.zip GitLab-Importer-windows-amd64.exe
+          zip GitLab-Importer-darwin-amd64.zip GitLab-Importer-darwin-amd64
+          
+          # Generate checksums
+          sha256sum GitLab-Importer-*.zip > checksums.txt
 
       - name: Generate Changelog Notes
         id: changelog
