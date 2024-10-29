@@ -1,4 +1,3 @@
-
 name: Build and Release
 on:
   push:
@@ -50,8 +49,6 @@ jobs:
             zip "${file}.zip" "$file"
           done
           
-          # Generate checksums
-          sha256sum *.zip > checksums.txt
       - name: Generate Changelog Notes
         id: changelog
         uses: mikepenz/release-changelog-builder-action@v2
@@ -72,4 +69,3 @@ jobs:
           prerelease: false
           files: |
             build/*.zip
-            build/checksums.txt
