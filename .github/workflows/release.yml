@@ -1,3 +1,4 @@
+
 name: Build and Release
 on:
   push:
@@ -12,12 +13,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          fetch-depth: 0 
 
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.23.1'
+          go-version: '1.23.1' 
 
       - name: Build
         run: |
@@ -39,39 +40,36 @@ jobs:
               -o "build/$binary_name-$os-$arch$([[ $os = "windows" ]] && echo ".exe" || echo "")" \
               ./cmd/main.go
           done
-
       - name: Create Archives
         run: |
           set -e
           cd build
           
+          # Create archives for each binary
           for file in GitLab-Importer-*; do
             zip "${file}.zip" "$file"
           done
-
-      - name: Generate Release Notes
-        id: release_notes
-        run: |
-          # Get the previous tag
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           
-          if [ -z "$PREVIOUS_TAG" ]; then
-            echo "CHANGELOG=$(git log --pretty=format:'- %s (%h)' | awk '{printf "%s\\n", $0}')" >> $GITHUB_OUTPUT
-          else
-            echo "CHANGELOG=$(git log --pretty=format:'- %s (%h)' ${PREVIOUS_TAG}..${{ github.ref_name }} | awk '{printf "%s\\n", $0}')" >> $GITHUB_OUTPUT
-          fi
+          # Generate checksums
+          sha256sum *.zip > checksums.txt
+      - name: Generate Changelog Notes
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@v2
+        with:
+          configuration: .github/release-changelog-config.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.ORIGIN_TOKEN }}
 
       - name: Create GitHub Release
+        id: create_release
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.ORIGIN_TOKEN }}
           tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
-          body: |
-            ## What's Changed
-            ${{ steps.release_notes.outputs.CHANGELOG }}
-            
+          name: ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.changelog }}
           draft: false
           prerelease: false
           files: |
             build/*.zip
+            build/checksums.txt
