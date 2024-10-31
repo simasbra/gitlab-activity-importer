@@ -64,8 +64,8 @@ export COMMITER_EMAIL=your_email@example.com
 ## Configuration
 This project uses GitHub Actions to automate builds and daily synchronization:
 
-•	GitHub Actions Workflow: The .github/workflows/schedule.yml defines the automation steps for building and running the tool.
-•	Secrets Configuration: The secrets allow secure storage and retrieval of required tokens and URLs during automation.
+- GitHub Actions Workflow: The .github/workflows/schedule.yml defines the automation steps for building and running the tool.
+- Secrets Configuration: The secrets allow secure storage and retrieval of required tokens and URLs during automation.
 
 ### Important Notes:
 - **GitLab permissions:** The tool only requires read access to your GitLab repositories.
