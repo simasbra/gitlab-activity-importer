@@ -86,15 +86,19 @@ func GetUsersProjectsIds(userId int) ([]int, error) {
 func GetProjectCommits(projectId int, userName string) []internal.Commit {
 	url := os.Getenv("BASE_URL")
 	token := os.Getenv("GITLAB_TOKEN")
+	since := os.Getenv("SINCE")
 
 	var allCommits []internal.Commit
 	client := &http.Client{}
 	page := 1
 
-	since := time.Now().UTC().Add(-24 * time.Hour).Format(time.RFC3339)
+	requestUrl := fmt.Sprintf("%v/api/v4/projects/%v/repository/commits?author=%v&per_page=100&page=%d", url, projectId, userName, page)
+	if (since != "") {
+		requestUrl += "&since=" + since;
+	}
 
 	for {
-		req, err := http.NewRequest("GET", fmt.Sprintf("%v/api/v4/projects/%v/repository/commits?author=%v&per_page=100&page=%d&since=%v", url, projectId, userName, page, since), nil)
+		req, err := http.NewRequest("GET", requestUrl, nil)
 		if err != nil {
 			log.Fatalf("Error fetching the commits: %v", err)
 		}

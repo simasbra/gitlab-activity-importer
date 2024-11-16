@@ -39,15 +39,15 @@ To do that follow these steps:
    - Add the following secrets:
 
 
-        | Secret Name       | Description                                                            |
-        | ----------------- | ---------------------------------------------------------------------- |
-        | `BASE_URL`        | URL of your GitLab instance (e.g., `https://gitlab.com`)               |
-        | `COMMITER_EMAIL`  | Email associated with your GitHub profile                              |
-        | `COMMITER_NAME`   | Your full name as it appears on GitHub                                 |
-        | `GITLAB_TOKEN`    | GitLab personal access token (read permissions only)                   |
-        | `ORIGIN_TOKEN`    | GitHub personal access token (with write permissions for auto-push)    |
-        | `ORIGIN_REPO_URL` | HTTPS URL of your GitHub repository (ensure it has a `.git` extension) |
-
+        | Secret Name       | Description                                                                      |
+        | ----------------- | -------------------------------------------------------------------------------- |
+        | `BASE_URL`        | URL of your GitLab instance (e.g., `https://gitlab.com`)                         |
+        | `COMMITER_EMAIL`  | Email associated with your GitHub profile                                        |
+        | `COMMITER_NAME`   | Your full name as it appears on GitHub                                           |
+        | `GITLAB_TOKEN`    | GitLab personal access token (read permissions only)                             |
+        | `ORIGIN_TOKEN`    | GitHub personal access token (with write permissions for auto-push)              |
+        | `ORIGIN_REPO_URL` | HTTPS URL of your GitHub repository (ensure it has a `.git` extension)           |
+        | `SINCE`           | GitLab commits since (date in ISO 8601). If not set, all commits will be fetched |
 Once these variables are saved in your Repository secrets, your commits will be automatically updated every day.
 
 ### 2. Manual Imports
