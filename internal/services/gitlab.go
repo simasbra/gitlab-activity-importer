@@ -92,7 +92,7 @@ func GetProjectCommits(projectId int, userName string) []internal.Commit {
 	page := 1
 
 	requestUrl := fmt.Sprintf("%v/api/v4/projects/%v/repository/commits?author=%v&per_page=100&page=%d", url, projectId, userName, page)
-	if (since != "") {
+	if since != "" {
 		requestUrl += "&since=" + since;
 	}
 
