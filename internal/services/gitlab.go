@@ -9,7 +9,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/furmanp/gitlab-activity-importer/internal"
+	"github.com/simasbra/gitlab-activity-importer/internal"
 )
 
 func GetGitlabUser() string {

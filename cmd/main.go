@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/furmanp/gitlab-activity-importer/internal"
-	"github.com/furmanp/gitlab-activity-importer/internal/services"
+	"github.com/simasbra/gitlab-activity-importer/internal"
+	"github.com/simasbra/gitlab-activity-importer/internal/services"
 )
 
 func main() {

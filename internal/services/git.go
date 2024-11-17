@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/furmanp/gitlab-activity-importer/internal"
+	"github.com/simasbra/gitlab-activity-importer/internal"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
